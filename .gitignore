@@ -1,4 +1,5 @@
 dl.cfg
 data/
+tmp/
 .ipynb_checkpoints/
 keyboard
