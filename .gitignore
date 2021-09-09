@@ -2,4 +2,5 @@ dl.cfg
 data/
 tmp/
 .ipynb_checkpoints/
+.aws/
 keyboard
