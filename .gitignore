@@ -4,3 +4,4 @@ tmp/
 .ipynb_checkpoints/
 .aws/
 keyboard
+id_rsa.pub
