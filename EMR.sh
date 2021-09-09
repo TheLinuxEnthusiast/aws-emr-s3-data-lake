@@ -51,7 +51,7 @@ shift $((OPTIND-1))
 
 # Make sure all information is provided
 if [ -z "${CLUSTER_NAME}" ] || [ -z "${KEY_NAME}" ] || [ -z "${SUBNET_NAME}" ] || [ -z "${PROFILE_NAME}" ] ;then
-    usage
+    [ ! -z "${CLUSTER_ID}" ] && echo "Cluster ID provided" || usage 
 else
     echo "${CLUSTER_NAME}"
     echo "${KEY_NAME}"
@@ -60,7 +60,7 @@ else
 fi
 
 # Cannot destroy and create a cluster at the same time. Specify Cluster id only to destroy a particular cluster.
-if [ ! -z ${CLUSTER_ID} ] && [ ! -z "${CLUSTER_NAME}" ] || [ ! -z "${KEY_NAME}" ] || [ ! -z "${SUBNET_NAME}" ]; then
+if [ ! -z "${CLUSTER_ID}" ] && [ ! -z "${CLUSTER_NAME}" ]; then
     usage
 fi
 
