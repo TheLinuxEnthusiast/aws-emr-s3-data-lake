@@ -20,4 +20,4 @@ jobs:
         aws-region: us-west-2
 
     - name: Deploy ETL to S3 bucket
-      run: aws s3 sync ./public/ s3://sparkify-etl-code-df --delete
+      run: aws s3 sync . s3://sparkify-etl-code-df --delete
