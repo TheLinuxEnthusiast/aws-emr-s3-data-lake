@@ -107,9 +107,14 @@ def process_log_data(spark, input_data, output_data):
     
     log_data = spark.read.json(log_path)
   
-    users_table = log_data.select(["userId", "firstName", "lastName", "gender", "level"]).distinct()
+    users_table = log_data \
+                  .select(["userId", "firstName", "lastName", "gender", "level"]) \
+                  .withColumnRenamed("userId", "user_id") \
+                  .withColumnRenamed("firstName", "first_name") \
+                  .withColumnRenamed("lastName", "last_name") \
+                  .distinct() 
     
-    users_table.write.format("parquet").partitionBy("userId").mode("overwrite").save(output_data + "dim_user/")
+    users_table.write.format("parquet").partitionBy("user_id").mode("overwrite").save(output_data + "dim_user/")
 
     get_hour = udf(lambda x: x.hour)
     get_day = udf(lambda x: x.day)
@@ -145,7 +150,10 @@ def process_log_data(spark, input_data, output_data):
                  .join(songs_only, songs_only.title == songplay.song, 'inner') \
                  .join(time_table, time_table.ts == songplay.ts, 'inner') \
                  .select(songplay.ts, time_table.year, time_table.month, songplay.userId, songplay.level, songs_only.song_id, artist_only.artist_id, songplay.sessionId, songplay.location, songplay.userAgent) \
-
+                 .withColumnRenamed("userId", "user_id") \
+                 .withColumnRenamed("sessionId", "session_id")
+    
+    
     # write songplays table to parquet files partitioned by year and month
     songplays_table.write.format("parquet").partitionBy("year", "month").mode("overwrite").save(output_data + "fact_songPlay/")
 
