@@ -1,7 +1,10 @@
 import os
 import configparser
 from datetime import datetime
-from pyspark.sql import SparkSession
+from pyspark import SparkConf
+from pyspark import SparkContext
+from pyspark.sql.types import StructType, StructField, StringType, DoubleType, LongType
+from pyspark.sql import SparkSession, SQLContext
 from pyspark.sql.functions import udf, col
 from pyspark.sql.functions import year, month, dayofmonth, hour, weekofyear, date_format
 
@@ -16,7 +19,7 @@ AWS_SECRET_KEY=config.get('AWS', 'AWS_SECRET_ACCESS_KEY')
 S3_DESTINATION=config.get('S3', 'S3_DESTINATION')
 S3_INPUT=config.get('S3', 'S3_INPUT')
 
-#Global variables so data is visible to log processing function
+#Global variables are set, so data is visible to log processing function
 artist_data=None
 song_data=None
 
@@ -173,6 +176,8 @@ def main():
     
     process_song_data(spark, S3_INPUT, S3_DESTINATION)    
     process_log_data(spark, S3_INPUT, S3_DESTINATION)
+    
+    spark.stop()
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 usage(){ 
-    echo "Usage $0 [-n|name] [-k|key] [-s|subnet] [-p|profile] [-h|help] [-i|cluster_id]" 
+    echo "Usage $0 [-n|name] [-k|key] [-s|subnet] [-p|profile] [-h|help]" 
     exit 0
 }
 
@@ -28,9 +28,6 @@ do
         h)
             usage
             ;;
-        i)
-            CLUSTER_ID="${OPTARG}"
-            ;;
         *)
             usage
             ;;
@@ -49,6 +46,7 @@ else
     echo "${SUBNET_NAME}"
     echo "${PROFILE_NAME}"
 fi
+
 
 callEMRWithSteps(){
 
