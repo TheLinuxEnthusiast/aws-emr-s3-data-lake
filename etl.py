@@ -16,16 +16,9 @@ AWS_SECRET_KEY=config.get('AWS', 'AWS_SECRET_ACCESS_KEY')
 S3_DESTINATION=config.get('S3', 'S3_DESTINATION')
 S3_INPUT=config.get('S3', 'S3_INPUT')
 
-
-
-"""
-def create_spark_session():
-    spark = SparkSession \
-        .builder \
-        .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:2.7.0") \
-        .getOrCreate()
-    return spark
-"""
+#Global variables so data is visible to log processing function
+artist_data=None
+song_data=None
 
 def create_spark_session():
     """
@@ -55,7 +48,7 @@ def create_spark_session():
 
 def process_song_data(spark, input_data, output_data):
     """
-    Description: Processes song and artist data and writes a parquet file to S3
+    Description: Processes song and artist data that writes a parquet file to S3
     
     Arguments:
         spark - spark SQL context obect
@@ -66,60 +59,108 @@ def process_song_data(spark, input_data, output_data):
         None
     """
     
-    song_data = input_data + "song_data/"
+    global artist_data
+    global song_data
     
-    df = spark.read.json(song_data)
+    song_schema = StructType([StructField("artist_id",StringType(),True), \
+                         StructField("artist_latitude",DoubleType(),True), \
+                         StructField("artist_location",StringType(),True), \
+                         StructField("artist_longitude",DoubleType(),True), \
+                         StructField("artist_name",StringType(),True), \
+                         StructField("duration",DoubleType(),True), \
+                         StructField("num_songs",LongType(),True), \
+                         StructField("song_id",StringType(),True), \
+                         StructField("title",StringType(),True), \
+                         StructField("year",LongType(),True)])
+    
+    song_path = input_data + "song_data/*/*/*/*.json"
+    
+    songs = spark.read.json(song_path, schema = song_schema)
 
-    songs_table = df.select(["song_id","title","artist_id","year","duration"]).distinct()
+    song_data = songs.select(["song_id","title","artist_id","year","duration"]).distinct()
 
-    songs_table.write.format("parquet").partitionBy("year", "artist_id").mode("overwrite").save(output_data + "dim_song/")
+    song_data.write.format("parquet").partitionBy("year", "artist_id").mode("overwrite").save(output_data + "dim_song/")
 
-    artists_table = song_data.select(["artist_id","artist_name","artist_location","artist_latitude","artist_longitude"]).distinct()
+    artist_data= songs.select(["artist_id","artist_name","artist_location","artist_latitude","artist_longitude"]).distinct()
 
-    artist_table.write.format("parquet").partitionBy("artist_name").mode("overwrite").save(output_data + "dim_artist/")
+    artist_data.write.format("parquet").partitionBy("artist_name").mode("overwrite").save(output_data + "dim_artist/")
 
 
+    
 def process_log_data(spark, input_data, output_data):
-    # get filepath to log data file
-    log_data = input_data + "log_data/"
-
-    # read log data file
-    df = spark.read.json(log_data)
+    """
+    Description: Processes log files and writes them out as parquet files in S3.
     
-    # filter by actions for song plays
-    df = 
-
-    # extract columns for users table    
-    users_table = 
+    Arguments:
+        spark - Spark SQL context Object
+        input_data - Input log data path to S3
+        output_data - Output log data path to S3
     
-    # write users table to parquet files
-    users_table
-
-    # create timestamp column from original timestamp column
-    get_timestamp = udf()
-    df = 
+    Returns:
+        None
+    """
     
-    # create datetime column from original timestamp column
-    get_datetime = udf()
-    df = 
+    global artist_data
+    global song_data
     
-    # extract columns to create time table
-    time_table = 
+    log_path = input_data + "log_data/*/*/*.json"
     
-    # write time table to parquet files partitioned by year and month
-    time_table
+    log_data = spark.read.json(log_path)
+  
+    users_table = log_data.select(["userId", "firstName", "lastName", "gender", "level"]).distinct()
+    
+    users_table.write.format("parquet").partitionBy("userId").mode("overwrite").save(output_data + "dim_user/")
 
-    # read in song data to use for songplays table
-    song_df = 
+    get_hour = udf(lambda x: x.hour)
+    get_day = udf(lambda x: x.day)
+    get_week = udf(lambda x: x.isocalendar()[1])
+    get_month = udf(lambda x: x.month)
+    get_year = udf(lambda x: x.year)
+    get_weekday = udf(lambda x: x.isoweekday())
+    to_timestamp = udf(lambda x: int(x.timestamp()*1000))
+    to_datetime = udf(lambda x : datetime.utcfromtimestamp(x/1000.0))
+    
+    time_df = log_data.withColumn("ts_m", to_datetime("ts"))
+    
+    time_table = time_df.select(["ts_m"]).withColumn("ts", to_timestamp(time_df.ts_m)) \
+                        .withColumn("hour", get_hour(time_df.ts_m)) \
+                        .withColumn("day", get_day(time_df.ts_m)) \
+                        .withColumn("week", get_week(time_df.ts_m)) \
+                        .withColumn("month", get_month(time_df.ts_m)) \
+                        .withColumn("year", get_year(time_df.ts_m)) \
+                        .withColumn("weekday", get_weekday(time_df.ts_m)) \
+                        .select(["ts","hour","day","week","month","year","weekday"]) \
+                        .distinct()
+    
+    time_table.write.format("parquet").partitionBy("year", "month").mode("overwrite").save(output_data + "dim_time/")
 
-    # extract columns from joined song and log datasets to create songplays table 
-    songplays_table = 
+    songplay = log_data.select(["ts", "userId", "level", "song", "artist", "sessionId", "location", "userAgent"]).distinct()
+
+    # Filter global datasets for artist and songs
+    artist_only = artist_data.select(["artist_id","artist_name"]).distinct()
+    songs_only = song_data.select(["song_id","title"]).distinct()
+    
+    songplays_table = songplay \
+                 .join(artist_only, artist_only.artist_name == songplay.artist, 'inner') \
+                 .join(songs_only, songs_only.title == songplay.song, 'inner') \
+                 .join(time_table, time_table.ts == songplay.ts, 'inner') \
+                 .select(songplay.ts, time_table.year, time_table.month, songplay.userId, songplay.level, songs_only.song_id, artist_only.artist_id, songplay.sessionId, songplay.location, songplay.userAgent) \
 
     # write songplays table to parquet files partitioned by year and month
-    songplays_table
+    songplays_table.write.format("parquet").partitionBy("year", "month").mode("overwrite").save(output_data + "fact_songPlay/")
 
 
 def main():
+    """
+    Description: Main execution function for ETL.
+    
+    Arguments:
+        None
+    
+    Returns:
+        None
+    """
+    
     spark = create_spark_session()
     
     process_song_data(spark, S3_INPUT, S3_DESTINATION)    

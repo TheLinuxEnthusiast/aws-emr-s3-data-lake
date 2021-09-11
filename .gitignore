@@ -5,3 +5,4 @@ tmp/
 .aws/
 keyboard
 id_rsa.pub
+log_json_path.json
