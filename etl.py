@@ -83,10 +83,12 @@ def process_song_data(spark, input_data, output_data):
 
     song_data = songs.select(["song_id","title","artist_id","year","duration"]).distinct()
 
+    song_data = song_data.repartition(6)
     song_data.write.format("parquet").partitionBy("year", "artist_id").mode("overwrite").save(output_data + "dim_song/")
 
     artist_data= songs.select(["artist_id","artist_name","artist_location","artist_latitude","artist_longitude"]).distinct()
 
+    artist_data = artist_data.repartition(6)
     artist_data.write.format("parquet").partitionBy("artist_name").mode("overwrite").save(output_data + "dim_artist/")
 
 
@@ -118,6 +120,7 @@ def process_log_data(spark, input_data, output_data):
                   .withColumnRenamed("lastName", "last_name") \
                   .distinct() 
     
+    users_table = users_table.repartition(6)
     users_table.write.format("parquet").partitionBy("user_id").mode("overwrite").save(output_data + "dim_user/")
 
     get_hour = udf(lambda x: x.hour)
@@ -141,6 +144,7 @@ def process_log_data(spark, input_data, output_data):
                         .select(["ts","hour","day","week","month","year","weekday"]) \
                         .distinct()
     
+    time_table = time_table.repartition(6)
     time_table.write.format("parquet").partitionBy("year", "month").mode("overwrite").save(output_data + "dim_time/")
 
     songplay = log_data.select(["ts", "userId", "level", "song", "artist", "sessionId", "location", "userAgent"]).distinct()
@@ -159,6 +163,7 @@ def process_log_data(spark, input_data, output_data):
     
     
     # write songplays table to parquet files partitioned by year and month
+    songplays_table = songplays_table.repartition(6)
     songplays_table.write.format("parquet").partitionBy("year", "month").mode("overwrite").save(output_data + "fact_songPlay/")
 
 
