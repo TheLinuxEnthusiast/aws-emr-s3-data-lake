@@ -10,7 +10,8 @@ KEY_NAME=
 SUBNET_NAME=
 PROFILE_NAME=
 CLUSTER_ID=
-while getopts ":n:k:s:p:hi:" arg
+BUCKET_NAME=
+while getopts ":n:k:s:p:b:h" arg
 do
     case "$arg" in
         n)
@@ -25,6 +26,9 @@ do
         p)
             PROFILE_NAME="${OPTARG}"
             ;;
+        b)
+            BUCKET_NAME="${OPTARG}"
+            ;;
         h)
             usage
             ;;
@@ -38,17 +42,19 @@ shift $((OPTIND-1))
 
 
 # Make sure all information is provided
-if [ -z "${CLUSTER_NAME}" ] || [ -z "${KEY_NAME}" ] || [ -z "${SUBNET_NAME}" ] || [ -z "${PROFILE_NAME}" ] ;then
+if [ -z "${CLUSTER_NAME}" ] || [ -z "${KEY_NAME}" ] || [ -z "${SUBNET_NAME}" ] || [ -z "${PROFILE_NAME}" ] || [ -z "${BUCKET_NAME}"];
+then
     usage
 else
     echo "${CLUSTER_NAME}"
     echo "${KEY_NAME}"
     echo "${SUBNET_NAME}"
     echo "${PROFILE_NAME}"
+    echo "${BUCKET_NAME}"
 fi
 
 
-callEMRWithSteps(){
+callEMRWithBootstrap(){
 
     aws emr create-cluster \
     --name "${CLUSTER_NAME}" \
@@ -59,15 +65,13 @@ callEMRWithSteps(){
     --ec2-attributes KeyName="${KEY_NAME}",SubnetId="${SUBNET_NAME}" \
     --instance-type m5.xlarge \
     --profile "${PROFILE_NAME}" \
-    --bootstrap-actions Path="s3://sparkify-etl-code-df/bootstrap.sh"
-    
-	#--steps Type=CUSTOM_JAR,Name=CustomJAR,ActionOnFailure=CONTINUE,Jar=s3://us-west-2.elasticmapreduce/libs/script-runner/script-runner.jar,Args=["s3://sparkify-etl-code-df/bootstrap.sh"]
+    --bootstrap-actions Path="s3://sparkify-etl-code-df/bootstrap.sh",Args=["${BUCKET_NAME}"]
     
 }
 
 main(){
     
-    callEMRWithSteps
+    callEMRWithBootstrap
 
 }
 
