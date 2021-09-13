@@ -92,7 +92,10 @@ def process_song_data(spark, input_data, output_data):
     artist_window = Window.partitionBy("artist_id").orderBy("duration")
     song_data_with_window = song_data.withColumn("row_number_1",row_number().over(artist_window))
     
-    artist_data = song_data_with_window.filter(song_data_with_window.row_number_1 == 1).select(["artist_id","artist_name","artist_location","artist_latitude","artist_longitude"]).distinct()
+    artist_data = song_data_with_window \
+                                .filter(song_data_with_window.row_number_1 == 1) \
+                                .select(["artist_id","artist_name","artist_location","artist_latitude","artist_longitude"]) \
+                                .distinct()
 
     artist_data = artist_data.repartition(6)
     artist_data.write.format("parquet").partitionBy("artist_name").mode("overwrite").save(output_data + "dim_artist/")

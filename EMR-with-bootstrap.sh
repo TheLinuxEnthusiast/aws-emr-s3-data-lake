@@ -1,7 +1,7 @@
 #!/bin/bash
 
 usage(){ 
-    echo "Usage $0 [-n|name] [-k|key] [-s|subnet] [-p|profile] [-h|help]" 
+    echo "Usage $0 [-n|name] [-k|key] [-s|subnet] [-p|profile] [-b|bucket Name] [-h|help]" 
     exit 0
 }
 
