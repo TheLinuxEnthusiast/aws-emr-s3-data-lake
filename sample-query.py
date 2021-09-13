@@ -60,14 +60,14 @@ def main(output_data):
     spark = create_spark_session()
     
     #Read Parquet Files into spark from S3
-    user_df = sqlContext.read.parquet("s3a://sparkify-data-lake-df/dim_user/")
-    songPlay_df = sqlContext.read.parquet("s3a://sparkify-data-lake-df/fact_songPlay/")
+    user_df = spark.read.parquet("s3a://sparkify-data-lake-df/dim_user/")
+    songPlay_df = spark.read.parquet("s3a://sparkify-data-lake-df/fact_songPlay/")
     
     # Create temporary views for the data
     songPlay_df.createOrReplaceTempView("songplay")
     user_df.createOrReplaceTempView("users")
     
-    query_result = sqlContext.sql("""
+    query_result = spark.sql("""
     SELECT
         u.first_name,
         u.last_name,
