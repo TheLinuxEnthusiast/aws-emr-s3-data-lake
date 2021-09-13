@@ -42,7 +42,7 @@ shift $((OPTIND-1))
 
 
 # Make sure all information is provided
-if [ -z "${CLUSTER_NAME}" ] || [ -z "${KEY_NAME}" ] || [ -z "${SUBNET_NAME}" ] || [ -z "${PROFILE_NAME}" ] || [ -z "${BUCKET_NAME}"];
+if [ -z "${CLUSTER_NAME}" ] || [ -z "${KEY_NAME}" ] || [ -z "${SUBNET_NAME}" ] || [ -z "${PROFILE_NAME}" ] || [ -z "${BUCKET_NAME}" ];
 then
     usage
 else
