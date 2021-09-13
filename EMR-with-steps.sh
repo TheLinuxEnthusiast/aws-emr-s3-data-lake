@@ -59,8 +59,7 @@ callEMRWithSteps(){
     --ec2-attributes KeyName="${KEY_NAME}",SubnetId="${SUBNET_NAME}" \
     --instance-type m5.xlarge \
     --profile "${PROFILE_NAME}" \
-    --steps \
-    --auto-terminate
+    --steps Type=CUSTOM_JAR,Name=CustomJAR,ActionOnFailure=CONTINUE,Jar=s3://REGION.elasticmapreduce/libs/script-runner/script-runner.jar,Args=["s3://sparkify-etl-code-df/bootstrap.sh"]
     
 }
 
