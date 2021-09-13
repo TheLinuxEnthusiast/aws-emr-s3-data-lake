@@ -7,6 +7,8 @@ from pyspark.sql.types import StructType, StructField, StringType, DoubleType, L
 from pyspark.sql import SparkSession, SQLContext
 from pyspark.sql.functions import udf, col
 from pyspark.sql.functions import year, month, dayofmonth, hour, weekofyear, date_format
+from pyspark.sql.window import Window
+from pyspark.sql.functions import row_number
 
 
 config = configparser.ConfigParser()
@@ -86,7 +88,11 @@ def process_song_data(spark, input_data, output_data):
     song_data = song_data.repartition(6)
     song_data.write.format("parquet").partitionBy("year", "artist_id").mode("overwrite").save(output_data + "dim_song/")
 
-    artist_data= songs.select(["artist_id","artist_name","artist_location","artist_latitude","artist_longitude"]).distinct()
+    #Remove duplicates using a window function
+    artist_window = Window.partitionBy("artist_id").orderBy("duration")
+    song_data_with_window = song_data.withColumn("row_number_1",row_number().over(artist_window))
+    
+    artist_data = song_data_with_window.filter(song_data_with_window.row_number_1 == 1).select(["artist_id","artist_name","artist_location","artist_latitude","artist_longitude"]).distinct()
 
     artist_data = artist_data.repartition(6)
     artist_data.write.format("parquet").partitionBy("artist_name").mode("overwrite").save(output_data + "dim_artist/")
@@ -112,13 +118,20 @@ def process_log_data(spark, input_data, output_data):
     log_path = input_data + "log_data/*/*/*.json"
     
     log_data = spark.read.json(log_path)
-  
-    users_table = log_data \
-                  .select(["userId", "firstName", "lastName", "gender", "level"]) \
-                  .withColumnRenamed("userId", "user_id") \
-                  .withColumnRenamed("firstName", "first_name") \
-                  .withColumnRenamed("lastName", "last_name") \
-                  .distinct() 
+
+    # Window function to remove duplicates
+    user_window = Window.partitionBy("userId").orderBy(col("ts").desc())
+    log_data_with_window = log_data.withColumn("row_number_1",row_number().over(user_window))
+
+    
+    users_table = log_data_with_window \
+                            .filter(log_data_with_window.row_number_1 == 1) \
+                            .filter(log_data_with_window.userId != "") \
+                            .select(["userId", "firstName", "lastName", "gender", "level"]) \
+                            .withColumnRenamed("userId", "user_id") \
+                            .withColumnRenamed("firstName", "first_name") \
+                            .withColumnRenamed("lastName", "last_name") \
+                            .distinct()
     
     users_table = users_table.repartition(6)
     users_table.write.format("parquet").partitionBy("user_id").mode("overwrite").save(output_data + "dim_user/")
