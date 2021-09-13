@@ -90,7 +90,7 @@ def process_song_data(spark, input_data, output_data):
 
     #Remove duplicates using a window function
     artist_window = Window.partitionBy("artist_id").orderBy("duration")
-    song_data_with_window = song_data.withColumn("row_number_1",row_number().over(artist_window))
+    song_data_with_window = songs.withColumn("row_number_1",row_number().over(artist_window))
     
     artist_data = song_data_with_window \
                                 .filter(song_data_with_window.row_number_1 == 1) \
