@@ -106,15 +106,7 @@ Usage ./EMR-with-bootstrap.sh [-n|name] [-k|key] [-s|subnet] [-p|profile] [-b|bu
 
 #### EMR Environment Set-up and ETL execution
 
-The bootstrap script should set up most of the environment variables required to run the etl.py script. Check the dl.cfg to make sure the destination bucket is provided. Source Code is pulled from a public bucket called 
-
-**sparkify-etl-code-df** 
-
-otherwise, you'll need to clone the git repo onto the master node and set up by running 
-
-**./bootstrap.sh "bucket_name"** 
-
-. "bucket_name" is the destination bucket where you would like to push the output parquet files.
+<p>The bootstrap script should set up most of the environment variables required to run the etl.py script. Check the dl.cfg to make sure the destination bucket is provided. Source Code is pulled from a public bucket called <b>sparkify-etl-code-df</b> otherwise, you'll need to clone the git repo onto the master node and set up by running <b>./bootstrap.sh "bucket_name"</b>. "bucket_name" is the destination bucket where you would like to push the output parquet files.</p>
 
 <br>
 
@@ -126,13 +118,9 @@ otherwise, you'll need to clone the git repo onto the master node and set up by 
 
 ```
 
-If everything works, the pyspark job should take approx 
+<p>If everything works, the pyspark job should take approx <b>20min</b>. You should see output directories, one for each table:</p>
 
-**20min** 
-
-. You should see output directories, one for each table:
-
-sparkify-data-lake-df/
+-> sparkify-data-lake-df/
 
     -> dim_user/
     
@@ -189,8 +177,4 @@ sparkify-data-lake-df/
 | Jacqueline  | Lynch      | 29       | 7             |
 
 
-Output should be sent to a folder 
-
-**query_output/** 
-
-under the destination bucket. The file will be in csv format.
+<p>Output should be sent to a folder <b>query_output/</b> under the destination bucket. The file will be in csv format.</p>
