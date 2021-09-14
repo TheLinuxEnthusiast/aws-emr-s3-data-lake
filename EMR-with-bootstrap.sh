@@ -65,7 +65,7 @@ callEMRWithBootstrap(){
     --ec2-attributes KeyName="${KEY_NAME}",SubnetId="${SUBNET_NAME}" \
     --instance-type m5.xlarge \
     --profile "${PROFILE_NAME}" \
-    --bootstrap-actions Path="s3://sparkify-etl-code-df/bootstrap.sh",Args=[${BUCKET_NAME}]
+    --bootstrap-actions Path="s3://sparkify-etl-code-df/bootstrap.sh",Args=("${BUCKET_NAME}")
     
 }
 

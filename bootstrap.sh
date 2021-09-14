@@ -1,6 +1,32 @@
 #!/bin/bash
 
+usage() { 
+        echo "Usage $0 [-b| bucket_name] [-h|help]" 
+        exit 0
+}
+
 bucket_name="$1"
+
+#while getopts "b:h" o;
+#do
+#    case "${o}" in
+#    b)
+#        bucket_name="${OPTARG}"
+#    ;;
+#    h)
+#        usage
+#    ;;
+#    *)
+#        usage
+#    ;;
+#    esac
+#done
+#shift $(($OPTIND-1))
+
+if [ -z "${bucket_name}" ];
+then
+    usage
+fi
 
 sudo python3 -m ensurepip --upgrade
 sudo python3 -m pip install findspark
