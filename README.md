@@ -118,19 +118,23 @@ Usage ./EMR-with-bootstrap.sh [-n|name] [-k|key] [-s|subnet] [-p|profile] [-b|bu
 
 ```
 
-<p>If everything works, the pyspark job should take approx <b>20min</b>. You should see output directories, one for each table:</p>
+<p>If everything works, the pyspark job should take approx <b>15-20min</b>. You should see output directories, one for each table under the destination bucket.</p>
 
--> sparkify-data-lake-df/
+<br>
 
-    -> dim_user/
-    
-    -> dim_artist/
-    
-    -> dim_song/
-    
-    -> dim_time/
-    
-    -> fact_songPlay/
+### Schema Design
+
+<p>The data model is essentially a star schema that follows the same structure as the existing DWH on redshift. The main difference is that the data is not stored on a database system but as raw data on S3 as parquet files. There are still four dimension tables and a single fact table. Data must be loaded into spark or analysed using a tool such as AWS Athena in order to perform queries on the data. ETL Processing will be done on EMR using pyspark jobs. The instances can be shut down after completion using --auto-terminate which will help save costs of performing ETL on the data.</p> 
+
+<br>
+
+| Table Name    | Description                                                                   |
+|--------------:|:-----------------------------------------------------------------------------:|
+| dim_user      | Information relating to users, both free users and subscribers                |
+| dim_artist    | List of tracked artists within sparkify                                       |
+| dim_song      | List of tracked Songs within sparkify                                         |
+| dim_time      | Time broken out by week, day, weekday, hour etc for data aggregation          |
+| fact_songPlay | Fact table containing user events, documents what songs are being listened to |                                        
 
 <br>
 
@@ -150,7 +154,7 @@ Usage ./EMR-with-bootstrap.sh [-n|name] [-k|key] [-s|subnet] [-p|profile] [-b|bu
         sp.user_id,
         COUNT(DISTINCT sp.session_id) as session_count
     FROM songplay sp
-    JOIN users u
+     JOIN users u
     ON u.user_id = sp.user_id
     GROUP BY 
         u.first_name,
