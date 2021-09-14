@@ -8,6 +8,14 @@
 
 <br>
 
+### Project Overview
+
+<br>
+
+<p>Demand for analytics within sparkify has grown tremendously over the last quarter which has prompted for a new requirement. A data lake to be built to accomodate sparkify's growing user base. The data lake will use AWS S3 as the storage layer while ETL processing will run pyspark jobs on AWS EMR, which will then write clean parquet files to the data lake. Parquet files will improve read performance and should make day to day analytics much quicker. A serverless tool like AWS Athena could be then used to read the source parquet files to peform day to day analytics. Just as a POC, a simple pyspark job is run to prove that files have been written correctly but AWS Athena would be a much better option. </p>
+
+<br>
+
 ### Project Description
 
 <br>
@@ -27,9 +35,17 @@
 | sample-query.py        | python           | Sample query to prove that data has been written correctly to S3              |
 | updateGit.sh           | shell            | Script for updating git parameters on admin server                            |
 | uplpadToS3.sh          | shell            | Test script for uploading files to S3                                         |
-|                        |                  |                                                                               |
 
 <br> 
+
+### Git Action Trigger on this project
+
+<br> 
+
+<p>A github action trigger has been set up on this repository to automatically push code out to S3 at s3://sparkify-etl-code-df/. This bucket is public and shoulde be accessible.</p>
+
+<br>
+
 
 #### Project set-up
 
@@ -42,6 +58,8 @@
 2. Nodes: Single master node and 2 worker nodes running emr version emr-5.28.0. Instance type = m5.xlarge.
 
 3. Applications to be installed: Spark
+
+4. Access to source code: Code is placed on S3 for EMR to use: In this project I'm using "sparkify-etl-code-df" (This bucket is public)
 
 
 <p>For convenience, the script "EMR-with-bootstrap.sh" is a wrapper for the aws cli which executes the following command</p>
@@ -58,12 +76,12 @@
     --ec2-attributes KeyName="${KEY_NAME}",SubnetId="${SUBNET_NAME}" \
     --instance-type m5.xlarge \
     --profile "${PROFILE_NAME}" \
-    --bootstrap-actions Path="s3://sparkify-etl-code-df/bootstrap.sh",Args=[${BUCKET_NAME}]
+    --bootstrap-actions Path="s3://sparkify-etl-code-df/bootstrap.sh",Args=${BUCKET_NAME}
 
 ```
 
 
-<p>You simply need to provide the various input parameters to create the EMR instance. It can be run like this from the command line:</p>
+<p>You simply need to provide the various input parameters to create the EMR instance. If you are using a different code source then you'll need to change the etl bucket name. EMR script can be run from the command line:</p>
 
 ```
 
@@ -74,29 +92,21 @@ Usage ./EMR-with-bootstrap.sh [-n|name] [-k|key] [-s|subnet] [-p|profile] [-b|bu
 
 ```
 
-1. [-n] -  Name of cluster
+1. [-n] - Name of cluster
 
-2. [-k] -  Key-pair created for connecting to EMR
+2. [-k] - Key-pair created for connecting to EMR
 
 3. [-s] - Subnet into which the EMR will be created
 
 4. [-p] - Profile credentials for AWS user (Must be created beforehand)
 
-5. [-b] - Output bucket Name (I have used sparkify-data-lake-df)
+5. [-b] - Output bucket Name for parquet files (I have used sparkify-data-lake-df)
 
 <br>
 
 #### EMR Environment Set-up and ETL execution
 
-<p>The bootstrap script should set up most of the environment variables required to run the ETL.py script. Check the dl.cfg to make sure the destination bucket is provided. Source Code is pulled from a public bucket called </p>
-
-**sparkify-etl-code-df**
-
-<p> otherwise, you'll need to clone the git repo onto the master node and set up by running </p>
-
-**./bootstrap.sh 'bucket_name'**
-
-<p>. bucket_name the destination bucket name with where you would like to push the output parquet files to.</p>
+<p>The bootstrap script should set up most of the environment variables required to run the etl.py script. Check the dl.cfg to make sure the destination bucket is provided. Source Code is pulled from a public bucket called </p> **sparkify-etl-code-df** <p> otherwise, you'll need to clone the git repo onto the master node and set up by running </p> **./bootstrap.sh "bucket_name"** <p>. "bucket_name" is the destination bucket where you would like to push the output parquet files.</p>
 
 <br>
 
@@ -108,11 +118,7 @@ Usage ./EMR-with-bootstrap.sh [-n|name] [-k|key] [-s|subnet] [-p|profile] [-b|bu
 
 ```
 
-<p>If everything works, the pyspark job should take approx <p/> 
-
-**20min**
-
-<p>. You should see output directories, one for each table:</p>
+<p>If everything works, the pyspark job should take approx <p/> *20min** <p>. You should see output directories, one for each table:</p>
 
 sparkify-data-lake-df/
 
@@ -132,7 +138,7 @@ sparkify-data-lake-df/
 
 <br>
 
-<p>The script sample-query.py is a simple analytical query which helps verify that parquet files were written correctly ot S3.</p>
+<p>The script sample-query.py is a simple analytical query which helps verify that parquet files were written correctly to S3.</p>
 
 <p>The query will list top ten most active users within sparkify logs</p>
 
@@ -157,7 +163,6 @@ sparkify-data-lake-df/
 
 <p>Ouput should look like this:</p>
 
-|             |            |          |               |
 | first_name  | last_name  | user_id  | session_count |
 |------------:|:----------:|:--------:|:-------------:|
 | Chloe       | Cuevas     | 49       | 28            |
@@ -170,10 +175,6 @@ sparkify-data-lake-df/
 | Matthew     | Jones      | 36       | 8             |
 | Layla       | Griffin    | 24       | 7             |
 | Jacqueline  | Lynch      | 29       | 7             |
-|             |            |          |               |
 
-<p>Output should be sent to an output folder </p>
 
-**query_output/**
-
-<p>. The file will be in csv format.</p>
+<p>Output should be sent to a folder </p> **query_output/** <p> under the destination bucket. The file will be in csv format.</p>
