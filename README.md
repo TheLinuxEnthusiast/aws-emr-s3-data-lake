@@ -12,7 +12,7 @@
 
 <br>
 
-<p>Demand for analytics within sparkify has grown tremendously over the last quarter which has prompted for a new requirement. A data lake to be built to accomodate sparkify's growing user base. The data lake will use AWS S3 as the storage layer while ETL processing will run pyspark jobs on AWS EMR, which will then write clean parquet files to the data lake. Parquet files will improve read performance and should make day to day analytics much quicker. A serverless tool like AWS Athena could be then used to read the source parquet files to peform day to day analytics. Just as a POC, a simple pyspark job is run to prove that files have been written correctly but AWS Athena would be a much better option. </p>
+<p>Demand for analytics within sparkify has grown tremendously over the last quarter which has prompted for a new requirement. A data lake is to be built to accomodate sparkify's growing user base. The data lake will use AWS S3 as the storage layer while ETL processing will run pyspark jobs on AWS EMR, which will then write clean parquet files to the data lake. Parquet files will improve read performance and should make day to day analytics much quicker. A serverless tool like AWS Athena could be then used to read the source parquet files to peform day to day analytics. Just as a POC, a simple pyspark job is run to prove that files have been written correctly but AWS Athena would be a much better option. </p>
 
 <br>
 
@@ -42,7 +42,7 @@
 
 <br> 
 
-<p>A github action trigger has been set up on this repository to automatically push code out to S3 at s3://sparkify-etl-code-df/. This bucket is public and shoulde be accessible.</p>
+<p>A github action trigger has been set up on this repository to automatically push code out to S3 at s3://sparkify-etl-code-df/. This bucket is public and should be accessible.</p>
 
 <br>
 
@@ -106,7 +106,15 @@ Usage ./EMR-with-bootstrap.sh [-n|name] [-k|key] [-s|subnet] [-p|profile] [-b|bu
 
 #### EMR Environment Set-up and ETL execution
 
-<p>The bootstrap script should set up most of the environment variables required to run the etl.py script. Check the dl.cfg to make sure the destination bucket is provided. Source Code is pulled from a public bucket called </p> **sparkify-etl-code-df** <p> otherwise, you'll need to clone the git repo onto the master node and set up by running </p> **./bootstrap.sh "bucket_name"** <p>. "bucket_name" is the destination bucket where you would like to push the output parquet files.</p>
+The bootstrap script should set up most of the environment variables required to run the etl.py script. Check the dl.cfg to make sure the destination bucket is provided. Source Code is pulled from a public bucket called 
+
+**sparkify-etl-code-df** 
+
+otherwise, you'll need to clone the git repo onto the master node and set up by running 
+
+**./bootstrap.sh "bucket_name"** 
+
+. "bucket_name" is the destination bucket where you would like to push the output parquet files.
 
 <br>
 
@@ -118,7 +126,11 @@ Usage ./EMR-with-bootstrap.sh [-n|name] [-k|key] [-s|subnet] [-p|profile] [-b|bu
 
 ```
 
-<p>If everything works, the pyspark job should take approx <p/> *20min** <p>. You should see output directories, one for each table:</p>
+If everything works, the pyspark job should take approx 
+
+**20min** 
+
+. You should see output directories, one for each table:
 
 sparkify-data-lake-df/
 
@@ -177,4 +189,8 @@ sparkify-data-lake-df/
 | Jacqueline  | Lynch      | 29       | 7             |
 
 
-<p>Output should be sent to a folder </p> **query_output/** <p> under the destination bucket. The file will be in csv format.</p>
+Output should be sent to a folder 
+
+**query_output/** 
+
+under the destination bucket. The file will be in csv format.
